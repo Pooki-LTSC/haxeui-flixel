@@ -408,10 +408,10 @@ class ComponentImpl extends ComponentBase {
                 if (_textDisplay != null && (f is Outline)) {
                     var o = cast(f, Outline);
                     var col = o.color;
-                    _textDisplay.tf.setBorderStyle(FlxTextBorderStyle.OUTLINE, 0xFF000000 | o.color, o.size);
+                    _textDisplay.tf.setBorderStyle(FlxTextBorderStyle.OUTLINE, 0xFF000000 | o.color, o.size * _textDisplay.renderScale);
                 } else if (_textDisplay != null && (f is DropShadow)) {
                     var o = cast(f, DropShadow);
-                    _textDisplay.tf.setBorderStyle(FlxTextBorderStyle.SHADOW, 0xFF000000 | o.color, o.distance);
+                    _textDisplay.tf.setBorderStyle(FlxTextBorderStyle.SHADOW, 0xFF000000 | o.color, o.distance * _textDisplay.renderScale);
                 }
             }
         }

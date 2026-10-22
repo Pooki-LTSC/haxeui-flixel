@@ -1,5 +1,7 @@
 package haxe.ui.backend;
 
+import flixel.FlxG;
+import flixel.math.FlxRect;
 import flixel.text.FlxText;
 import haxe.ui.Toolkit;
 import haxe.ui.util.Color;
@@ -8,13 +10,16 @@ class TextDisplayImpl extends TextBase {
     private static inline var PADDING_X:Int = 2;
     
     public var tf:FlxText;
+    public var renderScale(default, null):Float = 1;
     
     public function new() {
         super();
-        tf = new FlxText();
+        tf = new ScaledFlxText();
         tf.pixelPerfectRender = true;
         tf.autoSize = true;
         tf.active = false;
+        renderScale = Math.max(1, Math.ceil(FlxG.scaleMode.scale.x));
+        tf.scale.set(1 / renderScale, 1 / renderScale);
     }
     
     private override function validateData() {
@@ -45,7 +50,7 @@ class TextDisplayImpl extends TextBase {
             }
 
             if (_textStyle.fontSize != null) {
-                tf.size = Std.int(_textStyle.fontSize * Toolkit.scale);
+                tf.size = Std.int(_textStyle.fontSize * Toolkit.scale * renderScale);
                 measureTextRequired = true;
             }
             
@@ -84,23 +89,23 @@ class TextDisplayImpl extends TextBase {
     }
     
     private override function validateDisplay() {
-        if (tf.textField.width != _width) {
-            var width = _width * Toolkit.scaleX;
+        var width = _width * Toolkit.scaleX * renderScale;
+        if (tf.textField.width != width) {
             tf.textField.width = (width >= 1 ? width : 1);
         }
-        if (tf.textField.height != _height) {
-            var height = _height * Toolkit.scaleY;
+        var height = _height * Toolkit.scaleY * renderScale;
+        if (tf.textField.height != height) {
             tf.textField.height = (height >= 1 ? height : 1);
         }
     }
     
     private override function measureText() {
-        _textWidth = (Math.fround(tf.textField.textWidth) + (PADDING_X * Toolkit.scaleX)) / Toolkit.scaleX;
-        _textHeight = Math.fround(tf.textField.textHeight) / Toolkit.scaleY;
+        _textWidth = (Math.fround(tf.textField.textWidth / renderScale) + (PADDING_X * Toolkit.scaleX)) / Toolkit.scaleX;
+        _textHeight = Math.fround(tf.textField.textHeight / renderScale) / Toolkit.scaleY;
         if (_textHeight == 0) {
             var tmpText:String = tf.text;
             tf.text = "|";
-            _textHeight = tf.textField.textHeight;
+            _textHeight = tf.textField.textHeight / renderScale;
             tf.text = tmpText;
         }
     }
@@ -173,5 +178,19 @@ class TextDisplayImpl extends TextBase {
         }
         
         return out;
+    }
+}
+
+private class ScaledFlxText extends FlxText {
+    override function resetHelpers() {
+        super.resetHelpers();
+        origin.set(0, 0);
+    }
+
+    override function set_clipRect(rect:FlxRect):FlxRect {
+        if (rect != null && (scale.x != 1 || scale.y != 1)) {
+            rect = FlxRect.get(rect.x / scale.x, rect.y / scale.y, rect.width / scale.x, rect.height / scale.y);
+        }
+        return super.set_clipRect(rect);
     }
 }
